@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.apimgt.apiordermgt.mapper.InvoiceTitleMapper">
+
+    <select id="selectVoList"
+            resultType="com.apimgt.apiordermgt.common.vo.InvoiceTitleVO">
+        SELECT id, title_type AS titleType, name, tax_code AS taxCode,
+        created_at AS createdAt, updated_at AS updatedAt, version
+        FROM invoice_title
+        <where>
+            <if test="titleType != null and titleType != ''">
+                title_type = #{titleType}
+            </if>
+        </where>
+        ORDER BY title_type, name
+    </select>
+
+    <select id="countByNameAndType"
+        resultType="java.lang.Long">
+        SELECT COUNT(1) FROM invoice_title
+        WHERE name = #{name} AND title_type = #{titleType}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <select id="countByTaxCode"
+            resultType="java.lang.Long">
+        SELECT COUNT(1) FROM invoice_title
+        WHERE tax_code = #{taxCode}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <delete id="deleteByIdList">
+        DELETE FROM invoice_title
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

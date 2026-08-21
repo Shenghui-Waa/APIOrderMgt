@@ -1,0 +1,29 @@
+spring:
+  config:
+    import: optional:classpath:application-local.yml
+  application:
+    name: api-order-mgt
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1
+      minimum-idle: 1
+      connection-timeout: 5000
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  address: ${app.local.server-address:localhost}
+  port: ${app.local.server-port:8080}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+
+app:
+  database:
+    file-path: ${app.local.database-file-path:data/api-order-mgt.db}

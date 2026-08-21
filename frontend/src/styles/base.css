@@ -1,0 +1,52 @@
+:root {
+  --page-bg: #f5f7fa;
+  --surface-bg: #ffffff;
+  --line-color: #e5e7eb;
+  --text-primary: #1f2937;
+  --text-regular: #4b5563;
+  --text-secondary: #7b8794;
+  --brand-color: #2166b8;
+  --brand-deep: #184a87;
+  --success-color: #20825f;
+  --warning-color: #b66c12;
+  --danger-color: #c14444;
+  font-family: Inter, "Microsoft YaHei", "PingFang SC", sans-serif;
+  color: var(--text-primary);
+  background: var(--page-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 1120px;
+  margin: 0;
+  background: var(--page-bg);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: var(--brand-color);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+.el-button {
+  letter-spacing: 0;
+}
+
+.el-card {
+  border-color: var(--line-color);
+}
