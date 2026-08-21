@@ -61,3 +61,4 @@ dist-ssr
 
 # ENV
 application-local.yml
+data/
