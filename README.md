@@ -145,7 +145,7 @@ APIOrderMgt/
 
 项目仓库：[Shenghui-Waa/APIOrderMgt](https://github.com/Shenghui-Waa/APIOrderMgt)
 
-当前版本 `v1.5.3` 已发布 GitHub Release，可从仓库的 Releases 页面进入并下载构建产物。
+当前版本 `v1.5.4` 已发布 GitHub Release，可从仓库的 Releases 页面进入并下载构建产物。
 
 ## 许可证
 
