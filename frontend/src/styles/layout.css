@@ -1,0 +1,135 @@
+.app-shell {
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+.app-aside {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 18px 12px;
+  background: #122b4b;
+  border-right: 1px solid #0d2038;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+  padding: 10px 12px 24px;
+  color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: #173a68;
+  font-size: 18px;
+  font-weight: 700;
+  background: #e3efff;
+  border-radius: 7px;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand strong {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.brand small {
+  margin-top: 3px;
+  color: #9db4cf;
+  font-size: 11px;
+}
+
+.main-menu {
+  background: transparent;
+  border-right: 0;
+}
+
+.main-menu .el-menu-item {
+  height: 44px;
+  margin-bottom: 6px;
+  color: #c4d3e4;
+  line-height: 44px;
+  border-radius: 6px;
+}
+
+.main-menu .el-menu-item:hover {
+  color: #ffffff;
+  background: #1a3c64;
+}
+
+.main-menu .el-menu-item.is-active {
+  color: #ffffff;
+  background: #2166b8;
+}
+
+.aside-footer {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding: 14px 6px 4px;
+  border-top: 1px solid #294665;
+}
+
+.aside-footer .el-button {
+  justify-content: flex-start;
+  width: 100%;
+  margin-left: 0;
+}
+
+.aside-footer .el-button--text {
+  color: #c4d3e4;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+  padding: 0 32px;
+  background: var(--surface-bg);
+  border-bottom: 1px solid var(--line-color);
+}
+
+.app-header h1 {
+  margin-top: 3px;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.header-caption,
+.eyebrow {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.local-indicator {
+  padding: 5px 9px;
+  color: var(--success-color);
+  font-size: 12px;
+  background: #eaf7f1;
+  border: 1px solid #c7ead8;
+  border-radius: 4px;
+}
+
+.app-main {
+  padding: 30px 32px 42px;
+}

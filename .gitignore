@@ -57,3 +57,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# ENV
+application-local.yml
