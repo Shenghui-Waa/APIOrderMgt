@@ -120,7 +120,7 @@ async function deleteSelected(): Promise<void> {
   }
   try {
     await ElMessageBox.confirm(
-      `确定逻辑删除已选中的 ${selectedOrders.value.length} 个订单吗？`,
+      `确定删除已选中的 ${selectedOrders.value.length} 个订单吗？`,
       '删除订单',
       { type: 'warning' },
     )
@@ -165,10 +165,8 @@ onMounted(async () => {
         <p class="muted">记录每一笔 API 额度购买与开票信息。</p>
       </div>
       <div class="page-actions">
-        <el-button :icon="Refresh" @click="loadOrders">刷新</el-button>
-        <el-button type="primary" :icon="Plus" @click="router.push('/orders/new')">
-          新增订单
-        </el-button>
+        <el-button :icon="Refresh" @click="loadOrders" />
+        <el-button type="primary" :icon="Plus" @click="router.push('/orders/new')" />
       </div>
     </div>
 
@@ -180,6 +178,7 @@ onMounted(async () => {
         clearable
         :prefix-icon="Search"
         @keyup.enter="search"
+        style="width: 300px;"
       />
       <el-select
         v-model="filters.providerIds"
@@ -196,17 +195,17 @@ onMounted(async () => {
           :value="provider.id"
         />
       </el-select>
-      <el-select v-model="filters.invoiceStatus" class="filter-control" placeholder="开票状态">
+      <el-select v-model="filters.invoiceStatus" class="filter-control" placeholder="开票状态" style="width: 150px">
         <el-option label="全部开票状态" value="" />
         <el-option label="未开具" value="UNISSUED" />
         <el-option label="已开具" value="ISSUED" />
       </el-select>
-      <el-select v-model="filters.invoiceTitleType" class="filter-control" placeholder="抬头类型">
+      <el-select v-model="filters.invoiceTitleType" class="filter-control" placeholder="抬头类型" style="width: 150px">
         <el-option label="全部抬头类型" value="" />
         <el-option label="个人" value="PERSONAL" />
         <el-option label="企业" value="COMPANY" />
       </el-select>
-      <el-button type="primary" :icon="Search" @click="search">查询</el-button>
+      <el-button type="primary" :icon="Search" @click="search" />
       <el-button @click="resetFilters">重置</el-button>
     </div>
 
@@ -226,33 +225,34 @@ onMounted(async () => {
     <el-table
       v-loading="loading"
       :data="orders"
+      stripe
+      style="width: 100%"
       class="data-table"
       @selection-change="selectedOrders = $event"
     >
-      <el-table-column type="selection" width="46" />
-      <el-table-column label="订单编号" min-width="190">
+      <el-table-column type="selection" width="50" />
+      <el-table-column label="订单编号" width="200">
         <template #default="{ row }">
           <div class="copy-cell">
-            <span>{{ row.orderNo }}</span>
-            <el-button text size="small" @click="copyText(row.orderNo)">复制</el-button>
+            <el-button text size="small" @click="copyText(row.orderNo)"><span>{{ row.orderNo }}</span></el-button>
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="providerName" label="提供商" min-width="140" />
-      <el-table-column label="订单金额" min-width="125">
+      <el-table-column prop="providerName" label="提供商" width="100" />
+      <el-table-column label="订单金额" width="125">
         <template #default="{ row }">{{ formatAmount(row.amount) }}</template>
       </el-table-column>
-      <el-table-column label="支付方式" min-width="110">
+      <el-table-column label="支付方式" width="100">
         <template #default="{ row }">{{ getPaymentText(row.paymentMethod) }}</template>
       </el-table-column>
-      <el-table-column label="已开发票" min-width="112">
+      <el-table-column label="已开发票" width="100">
         <template #default="{ row }">
           <el-tag :type="row.invoiceStatus === 'ISSUED' ? 'success' : 'info'" effect="light">
             {{ getInvoiceStatusText(row.invoiceStatus) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="抬头类型" min-width="120">
+      <el-table-column label="抬头类型" width="100">
         <template #default="{ row }">
           <el-button
             v-if="row.invoiceStatus === 'ISSUED'"
@@ -265,29 +265,31 @@ onMounted(async () => {
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="218" fixed="right">
+      <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button text type="primary" :icon="View" @click="router.push(`/orders/${row.id}`)">
-            详情
-          </el-button>
+          <el-button text type="primary" :icon="View" @click="router.push(`/orders/${row.id}`)" />
           <el-button
             v-if="row.invoiceStatus === 'UNISSUED'"
             text
             type="primary"
             :icon="EditPen"
             @click="router.push(`/orders/${row.id}/edit`)"
-          >
-            修改
-          </el-button>
+          />
+          <el-button
+            v-else
+            text
+            type="primary"
+            :icon="EditPen"
+            disabled
+          />
+
           <el-button
             v-if="row.invoiceStatus === 'UNISSUED'"
             text
             type="success"
             :icon="DocumentChecked"
             @click="openInvoice(row)"
-          >
-            开具发票
-          </el-button>
+          />
         </template>
       </el-table-column>
     </el-table>

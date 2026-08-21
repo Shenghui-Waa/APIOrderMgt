@@ -50,7 +50,9 @@ public class InvoiceTitleServiceImpl implements InvoiceTitleService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public InvoiceTitleVO create(InvoiceTitleSaveRequest request) {
+    public InvoiceTitleVO create(
+            InvoiceTitleSaveRequest request
+    ) {
         normalizeAndValidate(request);
         validateUnique(request, null);
         InvoiceTitleEntity entity = toEntity(request);
@@ -131,9 +133,8 @@ public class InvoiceTitleServiceImpl implements InvoiceTitleService {
             throw new BusinessException(409, "同类型抬头名称已存在");
         }
         if (request.getTaxCode() != null
-                && invoiceTitleMapper.countByTaxCode(
-                request.getTaxCode(), excludeId
-        ) > 0) {
+                && invoiceTitleMapper.countByTaxCode(request.getTaxCode(), excludeId) > 0
+        ) {
             throw new BusinessException(409, "企业税号已存在");
         }
     }

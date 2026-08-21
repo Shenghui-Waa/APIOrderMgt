@@ -36,9 +36,8 @@ public class OrderServiceImpl implements OrderService {
             List<Long> providerIds,
             String invoiceStatus,
             String invoiceTitleType,
-            int page,
-            int pageSize,
-            boolean recycled) {
+            int page, int pageSize, boolean recycled
+    ) {
         validatePage(page, pageSize);
         validateInvoiceStatus(invoiceStatus);
         String normalizedKeyword = keyword == null ? null : keyword.trim();

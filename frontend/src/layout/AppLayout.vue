@@ -8,6 +8,7 @@ import {
 } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { GradientAvatar } from '@tsyanst/avatars-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,10 +29,9 @@ function navigate(path: string): void {
   <el-container class="app-shell">
     <el-aside class="app-aside" width="224px">
       <button class="brand" type="button" @click="navigate('/orders')">
-        <span class="brand-mark">A</span>
+        <span class="brand-mark"><GradientAvatar seed="API Order Mangement" :size="34" :radius="7" pattern="dither" /></span>
         <span>
           <strong>API 订单管理</strong>
-          <small>本地个人账务</small>
         </span>
       </button>
 
