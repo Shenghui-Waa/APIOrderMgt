@@ -28,7 +28,8 @@ public class InvoiceTitleController {
 
     @GetMapping
     public Result<List<InvoiceTitleVO>> list(
-            @RequestParam(required = false) String titleType) {
+            @RequestParam(required = false) String titleType
+    ) {
         return Result.success(invoiceTitleService.list(titleType));
     }
 
@@ -38,25 +39,30 @@ public class InvoiceTitleController {
     }
 
     @GetMapping("/{id}")
-    public Result<InvoiceTitleVO> detail(@PathVariable Long id) {
+    public Result<InvoiceTitleVO> detail(@PathVariable Long id
+    ) {
         return Result.success(invoiceTitleService.detail(id));
     }
 
     @PostMapping
     public Result<InvoiceTitleVO> create(
-            @Valid @RequestBody InvoiceTitleSaveRequest request) {
+            @Valid @RequestBody InvoiceTitleSaveRequest request
+    ) {
         return Result.success("发票抬头创建成功", invoiceTitleService.create(request));
     }
 
     @PutMapping("/{id}")
     public Result<InvoiceTitleVO> update(
             @PathVariable Long id,
-            @Valid @RequestBody InvoiceTitleSaveRequest request) {
+            @Valid @RequestBody InvoiceTitleSaveRequest request
+    ) {
         return Result.success("发票抬头修改成功", invoiceTitleService.update(id, request));
     }
 
     @PostMapping("/batch-delete")
-    public Result<Void> batchDelete(@Valid @RequestBody BatchIdRequest request) {
+    public Result<Void> batchDelete(
+            @Valid @RequestBody BatchIdRequest request
+    ) {
         invoiceTitleService.batchDelete(request);
         return Result.success("发票抬头删除成功", null);
     }

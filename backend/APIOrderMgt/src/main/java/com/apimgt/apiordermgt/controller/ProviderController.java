@@ -36,24 +36,30 @@ public class ProviderController {
 
     @PostMapping
     public Result<ProviderVO> create(
-            @Valid @RequestBody ProviderSaveRequest request) {
+            @Valid @RequestBody ProviderSaveRequest request
+    ) {
         return Result.success("提供商创建成功", providerService.create(request));
     }
 
     @GetMapping("/{id}")
-    public Result<ProviderVO> detail(@PathVariable Long id) {
+    public Result<ProviderVO> detail(
+            @PathVariable Long id
+    ) {
         return Result.success(providerService.detail(id));
     }
 
     @PutMapping("/{id}")
     public Result<ProviderVO> update(
             @PathVariable Long id,
-            @Valid @RequestBody ProviderSaveRequest request) {
+            @Valid @RequestBody ProviderSaveRequest request
+    ) {
         return Result.success("提供商修改成功", providerService.update(id, request));
     }
 
     @PostMapping("/batch-delete")
-    public Result<Void> batchDelete(@Valid @RequestBody BatchIdRequest request) {
+    public Result<Void> batchDelete(
+            @Valid @RequestBody BatchIdRequest request
+    ) {
         providerService.batchDelete(request);
         return Result.success("提供商删除成功", null);
     }

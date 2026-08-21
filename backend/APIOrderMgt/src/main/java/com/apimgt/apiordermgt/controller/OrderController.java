@@ -35,7 +35,8 @@ public class OrderController {
             @RequestParam(required = false) String invoiceStatus,
             @RequestParam(required = false) String invoiceTitleType,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
         return Result.success(orderService.page(
                 keyword, providerIds, invoiceStatus, invoiceTitleType,
                 page, pageSize, false
