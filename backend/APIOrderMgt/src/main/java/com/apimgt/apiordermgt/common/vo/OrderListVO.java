@@ -13,6 +13,7 @@ public class OrderListVO {
     private String invoiceStatus;
     private String invoiceTitleType;
     private String invoiceTitleName;
+    private Long invoiceBatchId;
     private String deletedAt;
     private String createdAt;
     private Long version;

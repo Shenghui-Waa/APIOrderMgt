@@ -1,28 +1,22 @@
 package com.apimgt.apiordermgt.common.vo;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
-public class OrderDetailVO {
-
+public class InvoiceBatchVO {
     private Long id;
-    private String orderNo;
-    private Long providerId;
-    private String providerName;
-    private String providerWebsiteUrl;
-    private Long amountCent;
-    private String paymentMethod;
-    private String invoiceStatus;
     private String invoiceDate;
     private String invoiceNo;
     private Long invoiceTitleId;
     private String invoiceTitleName;
     private String invoiceTitleType;
     private String invoiceTaxCode;
-    private Long invoiceBatchId;
-    private String deletedAt;
+    private Long totalAmountCent;
+    private String status;
+    private Long replacedFromId;
+    private List<Long> orderIds;
     private String createdAt;
     private String updatedAt;
     private Long version;
-
 }

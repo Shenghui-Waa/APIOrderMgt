@@ -9,12 +9,19 @@
         SELECT o.id, o.order_no AS orderNo, o.amount_cent AS amountCent,
         o.payment_method AS paymentMethod,
         o.invoice_status AS invoiceStatus, o.deleted_at AS deletedAt,
+        COALESCE(o.invoice_no, ib.invoice_no) AS invoiceNo,
         o.created_at AS createdAt, o.version,
         COALESCE(p.name, o.provider_name_snapshot) AS providerName,
         o.invoice_title_type_snapshot AS invoiceTitleType,
-        o.invoice_title_name_snapshot AS invoiceTitleName
+        o.invoice_title_name_snapshot AS invoiceTitleName,
+        (SELECT ibo.batch_id FROM invoice_batch_order ibo
+        JOIN invoice_batch ib ON ib.id = ibo.batch_id
+        WHERE ibo.order_id = o.id AND ib.status = 'ISSUED'
+        ORDER BY ib.id DESC LIMIT 1) AS invoiceBatchId
         FROM api_order o
         LEFT JOIN api_provider p ON p.id = o.provider_id
+        LEFT JOIN invoice_batch_order ibo ON ibo.order_id = o.id
+        LEFT JOIN invoice_batch ib ON ib.id = ibo.batch_id AND ib.status = 'ISSUED'
         <where>
             <choose>
                 <when test="recycled">o.deleted_at IS NOT NULL</when>
@@ -24,7 +31,7 @@
                 AND (o.order_no LIKE ('%' || #{keyword} || '%')
                 OR p.name LIKE ('%' || #{keyword} || '%')
                 OR o.provider_name_snapshot LIKE ('%' || #{keyword} || '%')
-                OR o.invoice_no LIKE ('%' || #{keyword} || '%')
+                OR COALESCE(o.invoice_no, ib.invoice_no) LIKE ('%' || #{keyword} || '%')
                 OR o.invoice_title_name_snapshot LIKE ('%' || #{keyword} || '%'))
             </if>
             <if test="providerIds != null and providerIds.size() > 0">
@@ -47,6 +54,8 @@
             resultType="java.lang.Long">
         SELECT COUNT(1) FROM api_order o
         LEFT JOIN api_provider p ON p.id = o.provider_id
+        LEFT JOIN invoice_batch_order ibo ON ibo.order_id = o.id
+        LEFT JOIN invoice_batch ib ON ib.id = ibo.batch_id AND ib.status = 'ISSUED'
         <where>
             <choose>
                 <when test="recycled">o.deleted_at IS NOT NULL</when>
@@ -56,7 +65,7 @@
                 AND (o.order_no LIKE ('%' || #{keyword} || '%')
                 OR p.name LIKE ('%' || #{keyword} || '%')
                 OR o.provider_name_snapshot LIKE ('%' || #{keyword} || '%')
-                OR o.invoice_no LIKE ('%' || #{keyword} || '%')
+                OR COALESCE(o.invoice_no, ib.invoice_no) LIKE ('%' || #{keyword} || '%')
                 OR o.invoice_title_name_snapshot LIKE ('%' || #{keyword} || '%'))
             </if>
             <if test="providerIds != null and providerIds.size() > 0">
@@ -78,7 +87,8 @@
         SELECT o.id, o.order_no AS orderNo, o.provider_id AS providerId,
         o.amount_cent AS amountCent, o.payment_method AS paymentMethod,
         o.invoice_status AS invoiceStatus, o.invoice_date AS invoiceDate,
-        o.invoice_no AS invoiceNo, o.invoice_title_id AS invoiceTitleId,
+        COALESCE(o.invoice_no, ib.invoice_no) AS invoiceNo,
+        o.invoice_title_id AS invoiceTitleId,
         o.deleted_at AS deletedAt, o.created_at AS createdAt,
         o.updated_at AS updatedAt, o.version,
         COALESCE(p.name, o.provider_name_snapshot) AS providerName,
@@ -86,9 +96,15 @@
         AS providerWebsiteUrl,
         o.invoice_title_name_snapshot AS invoiceTitleName,
         o.invoice_title_type_snapshot AS invoiceTitleType,
-        o.invoice_tax_code_snapshot AS invoiceTaxCode
+        o.invoice_tax_code_snapshot AS invoiceTaxCode,
+        (SELECT ibo.batch_id FROM invoice_batch_order ibo
+        JOIN invoice_batch ib ON ib.id = ibo.batch_id
+        WHERE ibo.order_id = o.id AND ib.status = 'ISSUED'
+        ORDER BY ib.id DESC LIMIT 1) AS invoiceBatchId
         FROM api_order o
         LEFT JOIN api_provider p ON p.id = o.provider_id
+        LEFT JOIN invoice_batch_order ibo ON ibo.order_id = o.id
+        LEFT JOIN invoice_batch ib ON ib.id = ibo.batch_id AND ib.status = 'ISSUED'
         WHERE o.id = #{id}
     </select>
 
@@ -121,6 +137,35 @@
         updated_at = #{updatedAt}, version = version + 1
         WHERE id = #{id} AND deleted_at IS NULL
         AND invoice_status = 'UNISSUED'
+    </update>
+
+    <update id="issueInvoiceBatch">
+        UPDATE api_order SET invoice_status = 'ISSUED',
+        invoice_date = #{invoiceDate},
+        invoice_no = CASE WHEN #{storeInvoiceNo} THEN #{invoiceNo} ELSE NULL END,
+        invoice_title_id = #{invoiceTitleId},
+        invoice_title_name_snapshot = #{invoiceTitleName},
+        invoice_title_type_snapshot = #{invoiceTitleType},
+        invoice_tax_code_snapshot = #{invoiceTaxCode},
+        updated_at = #{updatedAt}, version = version + 1
+        WHERE deleted_at IS NULL AND invoice_status = 'UNISSUED'
+        AND id IN
+        <foreach collection="orderIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="clearInvoiceBatch">
+        UPDATE api_order SET invoice_status = 'UNISSUED',
+        invoice_date = NULL, invoice_no = NULL, invoice_title_id = NULL,
+        invoice_title_name_snapshot = NULL,
+        invoice_title_type_snapshot = NULL,
+        invoice_tax_code_snapshot = NULL,
+        updated_at = #{updatedAt}, version = version + 1
+        WHERE id IN
+        <foreach collection="orderIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </update>
 
     <update id="logicalDeleteByIds">

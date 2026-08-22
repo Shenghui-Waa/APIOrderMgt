@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import {
+  CircleClose,
   Delete,
   DocumentChecked,
   EditPen,
   Plus,
   Refresh,
+  RefreshLeft,
   Search,
   View,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { invoiceTitleApi, orderApi, providerApi } from '../api'
+import { invoiceApi, invoiceTitleApi, orderApi, providerApi } from '../api'
 import type {
   InvoicePayload,
   InvoiceTitle,
@@ -38,6 +40,14 @@ const invoiceDialogVisible = ref(false)
 const titleDialogVisible = ref(false)
 const selectedTitle = ref<InvoiceTitle>()
 const currentOrder = ref<Order>()
+const currentInvoiceId = ref<number>()
+const invoiceMode = ref<'issue' | 'reissue'>('issue')
+
+const selectedUnissued = computed(() => selectedOrders.value.filter(
+  (order) => order.invoiceStatus !== 'ISSUED',
+))
+const canBatchInvoice = computed(() => selectedOrders.value.length > 1
+  && selectedUnissued.value.length === selectedOrders.value.length)
 
 const filters = reactive({
   keyword: '',
@@ -91,21 +101,92 @@ function resetFilters(): void {
 
 function openInvoice(order: Order): void {
   currentOrder.value = order
+  currentInvoiceId.value = undefined
+  invoiceMode.value = 'issue'
   invoiceForm.invoiceDate = ''
   invoiceForm.invoiceNo = ''
   invoiceForm.invoiceTitleId = undefined
+  invoiceForm.orderIds = [order.id]
   invoiceDialogVisible.value = true
 }
 
+function openBatchInvoice(): void {
+  if (!canBatchInvoice.value) {
+    ElMessage.warning('合并开票只能选择未开票订单')
+    return
+  }
+  currentOrder.value = undefined
+  currentInvoiceId.value = undefined
+  invoiceMode.value = 'issue'
+  invoiceForm.invoiceDate = ''
+  invoiceForm.invoiceNo = ''
+  invoiceForm.invoiceTitleId = undefined
+  invoiceForm.orderIds = selectedOrders.value.map((order) => order.id)
+  invoiceDialogVisible.value = true
+}
+
+function getInvoiceId(order: Order): number | undefined {
+  return order.invoiceId ?? order.invoiceBatchId ?? undefined
+}
+
+async function openReissue(order: Order): Promise<void> {
+  const invoiceId = getInvoiceId(order)
+  if (!invoiceId) {
+    ElMessage.warning('当前订单缺少发票批次信息，暂时无法重开')
+    return
+  }
+  try {
+    const invoice = await invoiceApi.detail(invoiceId)
+    invoiceForm.invoiceDate = invoice.invoiceDate || order.invoiceDate || ''
+    invoiceForm.invoiceNo = invoice.invoiceNo || order.invoiceNo || ''
+    invoiceForm.invoiceTitleId = invoice.invoiceTitleId || order.invoiceTitleId || undefined
+    invoiceForm.orderIds = invoice.orderIds?.length ? invoice.orderIds : [order.id]
+  } catch (error) {
+    ElMessage.error((error as Error).message)
+    return
+  }
+  currentOrder.value = order
+  currentInvoiceId.value = invoiceId
+  invoiceMode.value = 'reissue'
+  invoiceDialogVisible.value = true
+}
+
+async function voidInvoice(order: Order): Promise<void> {
+  const invoiceId = getInvoiceId(order)
+  if (!invoiceId) {
+    ElMessage.warning('当前订单缺少发票批次信息，暂时无法作废')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确定作废发票 ${order.invoiceNo || ''} 吗？作废后订单将恢复为未开票状态。`,
+      '作废发票',
+      { type: 'warning', confirmButtonText: '确认作废' },
+    )
+    await invoiceApi.void(invoiceId)
+    ElMessage.success('发票已作废，订单恢复为未开票')
+    loadOrders()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error((error as Error).message)
+    }
+  }
+}
+
 async function submitInvoice(): Promise<void> {
-  if (!currentOrder.value || !invoiceForm.invoiceDate || !invoiceForm.invoiceNo
+  if (!invoiceForm.orderIds?.length || !invoiceForm.invoiceDate || !invoiceForm.invoiceNo
     || !invoiceForm.invoiceTitleId) {
     ElMessage.warning('请完整填写开票信息')
     return
   }
   try {
-    await orderApi.issueInvoice(currentOrder.value.id, invoiceForm)
-    ElMessage.success('发票已开具')
+    if (invoiceMode.value === 'reissue' && currentInvoiceId.value) {
+      await invoiceApi.reissue(currentInvoiceId.value, invoiceForm)
+      ElMessage.success('发票已重开')
+    } else {
+      await invoiceApi.create(invoiceForm)
+      ElMessage.success(invoiceForm.orderIds.length > 1 ? '合并发票已开具' : '发票已开具')
+    }
     invoiceDialogVisible.value = false
     loadOrders()
   } catch (error) {
@@ -178,7 +259,7 @@ onMounted(async () => {
         clearable
         :prefix-icon="Search"
         @keyup.enter="search"
-        style="width: 300px;"
+        style="width: 250px;"
       />
       <el-select
         v-model="filters.providerIds"
@@ -211,15 +292,26 @@ onMounted(async () => {
 
     <div class="table-toolbar">
       <span>共 <b>{{ total }}</b> 条订单</span>
-      <el-button
-        type="danger"
-        plain
-        :icon="Delete"
-        :disabled="!selectedOrders.length"
-        @click="deleteSelected"
-      >
-        批量删除
-      </el-button>
+      <div class="table-toolbar-actions">
+        <el-button
+          type="success"
+          plain
+          :icon="DocumentChecked"
+          :disabled="!canBatchInvoice"
+          @click="openBatchInvoice"
+        >
+          合并开票
+        </el-button>
+        <el-button
+          type="danger"
+          plain
+          :icon="Delete"
+          :disabled="!selectedOrders.length"
+          @click="deleteSelected"
+        >
+          批量删除
+        </el-button>
+      </div>
     </div>
 
     <el-table
@@ -247,7 +339,11 @@ onMounted(async () => {
       </el-table-column>
       <el-table-column label="已开发票" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.invoiceStatus === 'ISSUED' ? 'success' : 'info'" effect="light">
+          <el-tag
+            :type="row.invoiceStatus === 'ISSUED' ? 'success'
+              : row.invoiceStatus === 'VOIDED' ? 'danger' : 'info'"
+            effect="light"
+          >
             {{ getInvoiceStatusText(row.invoiceStatus) }}
           </el-tag>
         </template>
@@ -267,19 +363,21 @@ onMounted(async () => {
       </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button text type="primary" :icon="View" @click="router.push(`/orders/${row.id}`)" />
+          <el-button text type="primary" :icon="View" @click="router.push(`/orders/${row.id}`)" style="width: 8px" />
           <el-button
             v-if="row.invoiceStatus === 'UNISSUED'"
             text
             type="primary"
             :icon="EditPen"
             @click="router.push(`/orders/${row.id}/edit`)"
+            style="width: 8px"
           />
           <el-button
             v-else
             text
             type="primary"
             :icon="EditPen"
+            style="width: 8px"
             disabled
           />
 
@@ -289,7 +387,24 @@ onMounted(async () => {
             type="success"
             :icon="DocumentChecked"
             @click="openInvoice(row)"
+            style="width: 8px"
           />
+          <template v-else-if="row.invoiceStatus === 'ISSUED'">
+            <el-button
+              text
+              type="warning"
+              :icon="RefreshLeft"
+              @click="openReissue(row)"
+              style="width: 8px"
+            />
+            <el-button
+              text
+              type="danger"
+              :icon="CircleClose"
+              @click="voidInvoice(row)"
+              style="width: 8px"
+            />
+          </template>
         </template>
       </el-table-column>
     </el-table>
@@ -304,7 +419,19 @@ onMounted(async () => {
       @change="loadOrders"
     />
 
-    <el-dialog v-model="invoiceDialogVisible" title="开具发票" width="480px" destroy-on-close>
+    <el-dialog
+      v-model="invoiceDialogVisible"
+      :title="invoiceMode === 'reissue'
+        ? '重开发票'
+        : (invoiceForm.orderIds?.length || 1) > 1 ? '合并开票' : '开具发票'"
+      width="480px"
+      destroy-on-close
+    >
+      <p class="invoice-dialog-note">
+        {{ invoiceMode === 'reissue'
+          ? '重开后原发票记录会保留，当前订单将关联新的发票信息。'
+          : `本次将关联 ${invoiceForm.orderIds?.length || 0} 笔订单。` }}
+      </p>
       <el-form label-position="top" class="dialog-form">
         <el-form-item label="开票日期" required>
           <el-date-picker

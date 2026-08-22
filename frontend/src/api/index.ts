@@ -1,6 +1,7 @@
 import { request } from './http'
 import type {
   InvoicePayload,
+  InvoiceBatch,
   InvoiceTitle,
   Order,
   OrderPayload,
@@ -34,11 +35,6 @@ export const orderApi = {
     method: 'PUT',
     body: payload,
   }),
-  issueInvoice: (id: number, payload: InvoicePayload) =>
-    request<Order>(`/orders/${id}/invoice`, {
-      method: 'POST',
-      body: payload,
-    }),
   batchDelete: (ids: number[]) => request<void>('/orders/batch-delete', {
     method: 'POST',
     body: { ids },
@@ -46,6 +42,22 @@ export const orderApi = {
   recycleBin: (params: Record<string, unknown>) =>
     request<PageResult<Order>>('/orders/recycle-bin', { params }).then(normalizePage),
   restore: (id: number) => request<void>(`/orders/${id}/restore`, { method: 'POST' }),
+}
+
+export const invoiceApi = {
+  create: (payload: InvoicePayload) => request<InvoiceBatch>('/invoices', {
+    method: 'POST',
+    body: payload,
+  }),
+  detail: (id: number) => request<InvoiceBatch>(`/invoices/${id}`),
+  reissue: (id: number, payload: InvoicePayload) =>
+    request<InvoiceBatch>(`/invoices/${id}/reissue`, {
+      method: 'POST',
+      body: payload,
+    }),
+  void: (id: number) => request<void>(`/invoices/${id}/void`, {
+    method: 'POST',
+  }),
 }
 
 export const providerApi = {

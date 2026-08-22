@@ -4,7 +4,7 @@ import { ElMessage } from 'element-plus'
 const paymentText: Record<PaymentMethod, string> = {
   ALIPAY: '支付宝',
   WECHAT: '微信',
-  BANK_CARD: '银行卡',
+  BANK_CARD: '银行卡'
 }
 
 const titleTypeText: Record<InvoiceTitleType, string> = {
@@ -21,7 +21,13 @@ export function getTitleTypeText(value?: InvoiceTitleType | null): string {
 }
 
 export function getInvoiceStatusText(value: InvoiceStatus): string {
-  return value === 'ISSUED' ? '已开具' : '未开具'
+  if (value === 'ISSUED') {
+    return '已开具'
+  }
+  if (value === 'VOIDED') {
+    return '已作废'
+  }
+  return '未开具'
 }
 
 export function formatAmount(value: number | string): string {
