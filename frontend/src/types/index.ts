@@ -1,4 +1,4 @@
-export type InvoiceStatus = 'UNISSUED' | 'ISSUED'
+export type InvoiceStatus = 'UNISSUED' | 'ISSUED' | 'VOIDED'
 export type InvoiceTitleType = 'PERSONAL' | 'COMPANY'
 export type PaymentMethod = 'ALIPAY' | 'WECHAT' | 'BANK_CARD'
 
@@ -54,6 +54,8 @@ export interface Order {
   invoiceTitleName?: string | null
   invoiceTitleType?: InvoiceTitleType | null
   invoiceTaxCode?: string | null
+  invoiceId?: number | null
+  invoiceBatchId?: number | null
   createdAt?: string
   updatedAt?: string
 }
@@ -69,4 +71,20 @@ export interface InvoicePayload {
   invoiceDate: string
   invoiceNo: string
   invoiceTitleId: number | undefined
+  orderIds?: number[]
+}
+
+export interface InvoiceBatch {
+  id: number
+  invoiceDate: string
+  invoiceNo: string
+  invoiceTitleId: number
+  invoiceTitleName?: string | null
+  invoiceTitleType?: InvoiceTitleType | null
+  invoiceTaxCode?: string | null
+  orderIds: number[]
+  totalAmount?: number | string
+  status?: 'ISSUED' | 'VOIDED'
+  createdAt?: string
+  updatedAt?: string
 }

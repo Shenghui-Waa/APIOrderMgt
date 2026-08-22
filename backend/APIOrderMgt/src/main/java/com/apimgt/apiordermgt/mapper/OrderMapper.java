@@ -52,6 +52,21 @@ public interface OrderMapper extends BaseMapper<APIOrderEntity> {
 
     Integer issueInvoice(APIOrderEntity entity);
 
+    Integer issueInvoiceBatch(
+            @Param("orderIds") List<Long> orderIds,
+            @Param("invoiceDate") String invoiceDate,
+            @Param("invoiceNo") String invoiceNo,
+            @Param("invoiceTitleId") Long invoiceTitleId,
+            @Param("invoiceTitleName") String invoiceTitleName,
+            @Param("invoiceTitleType") String invoiceTitleType,
+            @Param("invoiceTaxCode") String invoiceTaxCode,
+            @Param("storeInvoiceNo") boolean storeInvoiceNo,
+            @Param("updatedAt") String updatedAt
+    );
+
+    Integer clearInvoiceBatch(@Param("orderIds") List<Long> orderIds,
+                              @Param("updatedAt") String updatedAt);
+
 
     Integer logicalDeleteByIds(
             @Param("ids") List<Long> ids,

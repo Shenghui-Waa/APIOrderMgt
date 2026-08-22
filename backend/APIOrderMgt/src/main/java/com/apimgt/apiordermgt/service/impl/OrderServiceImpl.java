@@ -5,16 +5,16 @@ import com.apimgt.apiordermgt.common.dto.BatchIdRequest;
 import com.apimgt.apiordermgt.common.dto.PageResult;
 import com.apimgt.apiordermgt.common.entity.APIOrderEntity;
 import com.apimgt.apiordermgt.common.entity.APIProviderEntity;
-import com.apimgt.apiordermgt.common.entity.InvoiceTitleEntity;
 import com.apimgt.apiordermgt.common.exception.BusinessException;
-import com.apimgt.apiordermgt.mapper.InvoiceTitleMapper;
 import com.apimgt.apiordermgt.common.dto.InvoiceIssueRequest;
+import com.apimgt.apiordermgt.common.dto.InvoiceBatchIssueRequest;
 import com.apimgt.apiordermgt.common.dto.OrderSaveRequest;
 import com.apimgt.apiordermgt.mapper.OrderMapper;
 import com.apimgt.apiordermgt.common.vo.OrderDetailVO;
 import com.apimgt.apiordermgt.common.vo.OrderListVO;
 import com.apimgt.apiordermgt.mapper.ProviderMapper;
 import com.apimgt.apiordermgt.service.OrderService;
+import com.apimgt.apiordermgt.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +29,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderMapper orderMapper;
     private final ProviderMapper providerMapper;
-    private final InvoiceTitleMapper invoiceTitleMapper;
+    private final InvoiceService invoiceService;
 
     public PageResult<OrderListVO> page(
             String keyword,
@@ -117,36 +117,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional(rollbackFor = Exception.class)
     public OrderDetailVO issueInvoice(Long id, InvoiceIssueRequest request) {
-        OrderDetailVO order = detail(id);
-        if (order.getDeletedAt() != null) {
-            throw new BusinessException("已删除订单不能开票");
-        }
-        if (OrderConstant.INVOICE_STATUS_ISSUED.equals(order.getInvoiceStatus())) {
-            throw new BusinessException("订单已开具发票");
-        }
-        request.setInvoiceNo(request.getInvoiceNo().trim());
-        if (orderMapper.countByInvoiceNo(request.getInvoiceNo()) > 0) {
-            throw new BusinessException(409, "发票编号已存在");
-        }
-        InvoiceTitleEntity title = invoiceTitleMapper.selectById(
-                request.getInvoiceTitleId()
-        );
-        if (title == null) {
-            throw new BusinessException(404, "发票抬头不存在");
-        }
-        APIOrderEntity entity = new APIOrderEntity();
-        entity.setId(id);
-        entity.setInvoiceStatus(OrderConstant.INVOICE_STATUS_ISSUED);
-        entity.setInvoiceDate(request.getInvoiceDate().toString());
-        entity.setInvoiceNo(request.getInvoiceNo());
-        entity.setInvoiceTitleId(title.getId());
-        entity.setInvoiceTitleNameSnapshot(title.getName());
-        entity.setInvoiceTitleTypeSnapshot(title.getTitleType());
-        entity.setInvoiceTaxCodeSnapshot(title.getTaxCode());
-        entity.setUpdatedAt(LocalDateTime.now().toString());
-        if (orderMapper.issueInvoice(entity) != 1) {
-            throw new BusinessException("订单开票失败");
-        }
+        InvoiceBatchIssueRequest batchRequest = new InvoiceBatchIssueRequest();
+        batchRequest.setOrderIds(List.of(id));
+        batchRequest.setInvoiceDate(request.getInvoiceDate());
+        batchRequest.setInvoiceNo(request.getInvoiceNo());
+        batchRequest.setInvoiceTitleId(request.getInvoiceTitleId());
+        invoiceService.issue(batchRequest);
         return detail(id);
     }
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.apimgt.apiordermgt.mapper.InvoiceBatchMapper">
+    <insert id="insertBatchOrders">
+        INSERT INTO invoice_batch_order(batch_id, order_id, amount_cent)
+        VALUES
+        <foreach collection="items" item="item" separator=",">
+            (#{item.batchId}, #{item.orderId}, #{item.amountCent})
+        </foreach>
+    </insert>
+
+    <select id="selectDetail"
+            resultType="com.apimgt.apiordermgt.common.vo.InvoiceBatchVO">
+        SELECT id, invoice_date AS invoiceDate, invoice_no AS invoiceNo,
+        invoice_title_id AS invoiceTitleId,
+        invoice_title_name_snapshot AS invoiceTitleName,
+        invoice_title_type_snapshot AS invoiceTitleType,
+        invoice_tax_code_snapshot AS invoiceTaxCode,
+        total_amount_cent AS totalAmountCent, status,
+        replaced_from_id AS replacedFromId, created_at AS createdAt,
+        updated_at AS updatedAt, version
+        FROM invoice_batch WHERE id = #{id}
+    </select>
+
+    <select id="selectOrderIds" resultType="java.lang.Long">
+        SELECT order_id FROM invoice_batch_order
+        WHERE batch_id = #{id} ORDER BY id
+    </select>
+
+    <update id="updateStatus">
+        UPDATE invoice_batch SET status = #{status}, updated_at = #{updatedAt},
+        version = version + 1
+        WHERE id = #{id} AND status = 'ISSUED'
+    </update>
+</mapper>

@@ -17,6 +17,7 @@ public class DatabaseSchemaUtils {
         createProviderTable();
         createInvoiceTitleTable();
         createOrderTable();
+        createInvoiceBatchTables();
         createIndexes();
     }
 
@@ -60,7 +61,7 @@ public class DatabaseSchemaUtils {
                     payment_method TEXT NOT NULL,
                     invoice_status TEXT NOT NULL,
                     invoice_date TEXT,
-                    invoice_no TEXT UNIQUE,
+                    invoice_no TEXT,
                     invoice_title_id INTEGER,
                     invoice_title_name_snapshot TEXT,
                     invoice_title_type_snapshot TEXT,
@@ -90,6 +91,45 @@ public class DatabaseSchemaUtils {
         jdbcTemplate.execute("""
                 CREATE INDEX IF NOT EXISTS idx_api_order_invoice_status
                 ON api_order(invoice_status, deleted_at)
+                """);
+        jdbcTemplate.execute("""
+                CREATE INDEX IF NOT EXISTS idx_invoice_batch_order_order
+                ON invoice_batch_order(order_id)
+                """);
+        jdbcTemplate.execute("""
+                CREATE INDEX IF NOT EXISTS idx_invoice_batch_status
+                ON invoice_batch(status, created_at DESC)
+                """);
+    }
+
+    private void createInvoiceBatchTables() {
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS invoice_batch (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    invoice_date TEXT NOT NULL,
+                    invoice_no TEXT NOT NULL UNIQUE,
+                    invoice_title_id INTEGER NOT NULL,
+                    invoice_title_name_snapshot TEXT NOT NULL,
+                    invoice_title_type_snapshot TEXT NOT NULL,
+                    invoice_tax_code_snapshot TEXT,
+                    total_amount_cent INTEGER NOT NULL CHECK(total_amount_cent > 0),
+                    status TEXT NOT NULL,
+                    replaced_from_id INTEGER,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    version INTEGER NOT NULL DEFAULT 0
+                )
+                """);
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS invoice_batch_order (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    batch_id INTEGER NOT NULL,
+                    order_id INTEGER NOT NULL,
+                    amount_cent INTEGER NOT NULL CHECK(amount_cent > 0),
+                    UNIQUE(batch_id, order_id),
+                    FOREIGN KEY(batch_id) REFERENCES invoice_batch(id),
+                    FOREIGN KEY(order_id) REFERENCES api_order(id)
+                )
                 """);
     }
 
